@@ -91,7 +91,7 @@ def delete_option(message):
             bot.reply_to(message, "Invalid index. Enter a number.")
             return
 
-        index = int(index_text)
+        index = int(index_text)-1
 
         if index < 0 or index >= len(links):
             bot.reply_to(message, "Index out of range")
