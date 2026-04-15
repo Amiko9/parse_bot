@@ -23,4 +23,3 @@ def load_product_info(url):
         }
     except Exception as e:
         print(f"Error for {url}: {e}")
-        return None

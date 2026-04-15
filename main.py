@@ -1,11 +1,12 @@
 import os
 import telebot
-from telebot import types
-import threading
-import time
 import re
-import parser as pr
+import time
+import threading
+from telebot import types
+from parser import load_product_info
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
@@ -21,15 +22,47 @@ def start(message):
 
     btn1 = types.KeyboardButton("Add a link")
     btn2 = types.KeyboardButton("Check status")
+    btn3 = types.KeyboardButton("Delete option")
 
-    markup.add(btn1, btn2)
+    markup.add(btn1, btn2, btn3)
 
     bot.reply_to(message, "Bot is active!\nChoose an option: ", reply_markup = markup)
 
 @bot.message_handler(func = lambda message: message.text == "Add a link")
 def ask_link(message):
-    msg = bot.reply_to(message, "Enter a link:")
-    bot.register_next_step_handler(msg, add_link)
+    try:
+        msg = bot.reply_to(message, "Enter a link:")
+        bot.register_next_step_handler(msg, add_link)
+    except Exception as e:
+        print(e)
+
+@bot.message_handler(func = lambda message: message.text == "Check status")
+def check(message):
+    try:
+        result =""
+        for index, link in enumerate(links, 1):
+            info = load_product_info(link)
+            result += f"{index}:{info['title']} || {info['price']}\n"
+        bot.reply_to(message, result)
+    except Exception as e:
+        print(e)
+
+@bot.message_handler(func = lambda message: message.text == "Delete option")
+def ask_delete_index(message):
+    try:
+        if not links:
+            bot.reply_to(message, "No links to delete")
+            return
+
+        result = "Links list:\n\n"
+        for index, link in enumerate(links, 1):
+            info = load_product_info(link)
+            result += f"{index}:{info['title']} || {info['price']}\n"
+
+        msg = bot.reply_to(message, result + "\nEnter the index you want to delete:")
+        bot.register_next_step_handler(msg, delete_option)
+    except Exception as e:
+        print(e)
 
 def add_link(message):
 
@@ -37,7 +70,7 @@ def add_link(message):
             chat_ids.add(message.chat.id)
             if re.match(r"^https://[a-z0-9-/.]+$", f'{message.text.strip()}'):
                 links.append(message.text.strip())
-                info = pr.load_product_info(message.text.strip())
+                info = load_product_info(message.text.strip())
                 bot.reply_to(message, "Link added succesfully")
 
                 bot.reply_to(
@@ -50,19 +83,33 @@ def add_link(message):
         except Exception as e:
             print(e)
 
-@bot.message_handler(func = lambda message: message.text == "Check status")
-def check(message):
-    result =""
-    for index, link in enumerate(links, 1):
-        info = pr.load_product_info(link)
-        result += f"{index}:{info['title']} || {info['price']}\n"
-    bot.reply_to(message, result)
+def delete_option(message):
+    try:
+        index_text = message.text.strip()
 
+        if not index_text.isdigit():
+            bot.reply_to(message, "Invalid index. Enter a number.")
+            return
+
+        index = int(index_text)
+
+        if index < 0 or index >= len(links):
+            bot.reply_to(message, "Index out of range")
+            return
+
+        deleted_link = links.pop(index)
+
+        if deleted_link in last_prices:
+            del last_prices[deleted_link]
+
+        bot.reply_to(message, f"Deleted link:\n{deleted_link}")
+    except Exception as e:
+        print(e)
 def background_checker():
     while True:
         try:
             for link in links:
-                info = pr.load_product_info(link)
+                info = load_product_info(link)
 
                 if info is None:
                     continue
@@ -88,6 +135,7 @@ def background_checker():
         except Exception as e:
             print("Background checker error:", e)
             time.sleep(60)
+
 
 if __name__ == "__main__":
     thread = threading.Thread(target=background_checker, daemon=True)
