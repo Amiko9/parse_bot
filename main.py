@@ -28,22 +28,35 @@ def start(message):
 
 @bot.message_handler(func = lambda message: message.text == "Add a link")
 def ask_link(message):
-    bot.reply_to(message, "Enter a link:")
-@bot.message_handler(content_types=["text"])
+    msg = bot.reply_to(message, "Enter a link:")
+    bot.register_next_step_handler(msg, add_link)
+
 def add_link(message):
-    try:
-        chat_ids.add(message.chat.id)
-        if re.match(r"^https://neocomputer\.md/[a-z0-9-]+$", f'{message.text.strip()}'):
-            links.append(message.text.strip())
-            bot.reply_to(message, "Link added succesfully")
-        else:
-            bot.reply_to(message, "Invalid link")
-    except Exception as e:
-        print(e)
+
+        try:
+            chat_ids.add(message.chat.id)
+            if re.match(r"^https://[a-z0-9-/.]+$", f'{message.text.strip()}'):
+                links.append(message.text.strip())
+                info = pr.load_product_info(message.text.strip())
+                bot.reply_to(message, "Link added succesfully")
+
+                bot.reply_to(
+                    message,
+                    f"Monitoring started:\n{info['title']}\nPrice: {info['price']}\n{message.text.strip()}"
+                )
+
+            else:
+                bot.reply_to(message, "Invalid link")
+        except Exception as e:
+            print(e)
 
 @bot.message_handler(func = lambda message: message.text == "Check status")
 def check(message):
-    pass
+    result =""
+    for index, link in enumerate(links, 1):
+        info = pr.load_product_info(link)
+        result += f"{index}:{info['title']} || {info['price']}\n"
+    bot.reply_to(message, result)
 
 def background_checker():
     while True:
@@ -59,12 +72,6 @@ def background_checker():
 
                 if link not in last_prices:
                     last_prices[link] = current_price
-                    for chat_id in chat_ids:
-                        bot.send_message(
-                            chat_id,
-                            f"Monitoring started:\n{title}\nPrice: {current_price}\n{link}",
-                            disable_web_page_preview=True
-                        )
                 else:
                     old_price = last_prices[link]
 
