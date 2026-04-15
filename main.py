@@ -12,13 +12,12 @@ def start(message):
     bot.reply_to(message, text)
 
 @bot.message_handler(content_types=["voice"])
-
+def func2():
+    pass
 
 @bot.callback_query_handler(func=lambda call: True)
 def func():
-
-
-
+    pass
 
 if __name__ == "__main__":
     bot.polling(True)
