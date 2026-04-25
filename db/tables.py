@@ -14,6 +14,7 @@ sql_statements = [
     """,
     """ CREATE TABLE IF NOT EXISTS prices (
             product_id INTEGER NOT NULL,
+            chat_id INTEGER NOT NULL,
             magazine_name TEXT NOT NULL CHECK (magazine_name IN ('Darwin', 'Enter', 'Neocomputer')),
             link TEXT NOT NULL,
             price TEXT NOT NULL,
@@ -22,14 +23,18 @@ sql_statements = [
 );
          """
 ]
+def get_connection():
+    return sqlite3.connect(DB)
 
-try:
-    with sqlite3.connect(DB) as conn:
-        cursor = conn.cursor()
-        for statement in sql_statements:
-            cursor.execute(statement)
-        conn.commit()
+def create_tables():
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            for statement in sql_statements:
+                cursor.execute(statement)
+            conn.commit()
 
-        print("Tables created successfully.")
-except sqlite3.OperationalError as e:
-    print("Failed to create tables:", e)
+            print("Tables created successfully.")
+    except sqlite3.OperationalError as e:
+        print("Failed to create tables:", e)
+
