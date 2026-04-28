@@ -7,7 +7,7 @@ from telebot import types
 from parser import load_product_info
 from dotenv import load_dotenv
 from db.products import add_product
-from db.prices import add_price, get_all_prices, update_price,get_price, delete_price
+from db.prices import add_price, get_all_prices, update_price,get_price, delete_price, get_price_by_name
 from db.tables import create_tables
 
 load_dotenv()
@@ -23,8 +23,9 @@ def start(message):
     btn1 = types.KeyboardButton("Add a link")
     btn2 = types.KeyboardButton("Check status")
     btn3 = types.KeyboardButton("Delete option")
+    btn4 = types.KeyboardButton("Info for a product")
 
-    markup.add(btn1, btn2, btn3)
+    markup.add(btn1, btn2, btn3, btn4)
 
     bot.reply_to(message, "Bot is active!\nChoose an option: ", reply_markup = markup)
 
@@ -32,9 +33,12 @@ def start(message):
 def ask_link(message):
     try:
         msg = bot.reply_to(message, "Enter a link:")
-        bot.register_next_step_handler(msg, add_link)
+        bot.register_next_step_handler(msg, ask_custom_product_name)
+
     except Exception as e:
         print(e)
+
+
 
 @bot.message_handler(func = lambda message: message.text == "Check status")
 def check(message):
@@ -44,7 +48,7 @@ def check(message):
         result =""
         for index, row in enumerate(rows, 1):
             product_id, chat_id, title, magazine, url, price = row
-            result += f"{index}:{title} || {price}\n"
+            result += f"{index}:{title} || {magazine} || {price}\n"
         bot.reply_to(message, result)
     except Exception as e:
         print(e)
@@ -68,17 +72,63 @@ def ask_delete_index(message):
     except Exception as e:
         print(e)
 
-def add_link(message):
+
+@bot.message_handler(func=lambda message: message.text == "Info for a product")
+def get_info_by_name(message):
+    try:
+        msg = bot.reply_to(message, "Enter name for a product:")
+        bot.register_next_step_handler(msg, get_info_product)
+    except Exception as e:
+        print(e)
+
+
+
+
+def get_info_product(message):
+    try:
+        chat_id = message.chat.id
+        title = message.text.strip()
+        rows = get_price_by_name(title, chat_id)
+        result = ""
+        last_title = None
+        for index, row in enumerate(rows, 1):
+            product_id, chat_id, title, magazine, url, price = row
+            if title != last_title:
+                result += f"\n{index}. {title}\n"
+                last_title = title
+
+            result += f"   {magazine} || {price}\n"
+        bot.reply_to(message, result)
+
+    except Exception as e:
+        print(e)
+
+def ask_custom_product_name(message):
+    try:
+        url = message.text.strip()
+
+        if re.match(r"^https://[a-z0-9-/.]+$", url):
+            msg = bot.reply_to(message, "Enter alternative name for this product:")
+            bot.register_next_step_handler(msg, add_link, url)
+
+        else:
+            bot.reply_to(message, "Invalid link")
+    except Exception as e:
+        print(e)
+
+
+
+
+def add_link(message, url):
         try:
             chat_id = message.chat.id
-            url = message.text.strip()
-            if re.match(r"^https://[a-z0-9-/.]+$", f'{url}'):
+            custom_title = message.text.strip()
 
-                info = load_product_info(url)
 
-                product_id = add_product(info["title"])
+            info = load_product_info(url)
 
-                add_price(
+            product_id = add_product(custom_title)
+            add_price(
                     product_id,
                     chat_id,
                     info["magazine"],
@@ -86,15 +136,12 @@ def add_link(message):
                     info["price"]
                 )
 
-                bot.reply_to(message, "Link added succesfully")
+            bot.reply_to(message, "Link added succesfully")
 
-                bot.reply_to(
+            bot.reply_to(
                     message,
-                    f"Monitoring started:\n{info['title']}\nPrice: {info['price']}\n{message.text.strip()}"
+                    f"Monitoring started:\n{custom_title}\nReal title: {info['title']}\nPrice: {info['price']}\nMagazine: {info['magazine']}\n{url}"
                 )
-
-            else:
-                bot.reply_to(message, "Invalid link")
         except Exception as e:
             print(e)
 
@@ -114,7 +161,7 @@ def delete_option(message):
             bot.reply_to(message, "Index out of range")
             return
 
-        product_id, title, magazine, link, price = rows[index]
+        product_id, chat_id, title, magazine, link, price = rows[index]
 
         delete_price(product_id, chat_id, magazine)
 
@@ -157,3 +204,7 @@ if __name__ == "__main__":
     thread.start()
 
     bot.polling(True)
+
+
+
+    # 2. adaug option pentru querry dupa un product name

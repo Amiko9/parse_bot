@@ -75,3 +75,22 @@ def update_price(product_id, chat_id, magazine_name, price):
         """, (price, product_id,chat_id, magazine_name))
 
         conn.commit()
+
+def get_price_by_name(title, chat_id):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT 
+                products.id,
+                prices.chat_id,
+                products.name_product,
+                prices.magazine_name,
+                prices.link,
+                prices.price
+            FROM products
+            JOIN prices ON products.id = prices.product_id
+            WHERE products.name_product = ? AND prices.chat_id = ?
+        """, (title,chat_id,))
+
+        return cursor.fetchall()

@@ -28,9 +28,10 @@ def load_product_info(url):
             title_tag = soup.find(class_="fs-24 lh-25-fix")
             price_tag = soup.find(class_="block-price")
 
-        elif magazine == "Enter":
-            title_tag = soup.find(class_="fw-semibold fs-22 lh-base text-gray-900")
-            price_tag = soup.find(class_="fs-20")
+
+        # elif magazine == "Enter":
+        #     title_tag = soup.find(class_="fw-semibold fs-22 lh-base text-gray-900")
+        #     price_tag = soup.find(class_="fs-20")
 
         else:
             return None
@@ -38,6 +39,8 @@ def load_product_info(url):
         title = title_tag.get_text().strip()
         raw_price = price_tag.get_text().strip()
         price = raw_price.replace(" ", ".")
+        if magazine == "Darwin":
+            price = price.split("\n")[0]
 
         return {
             "url": url,
@@ -47,3 +50,4 @@ def load_product_info(url):
         }
     except Exception as e:
         print(f"Error for {url}: {e}")
+
