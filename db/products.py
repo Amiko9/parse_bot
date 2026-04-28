@@ -51,3 +51,13 @@ def delete_product(product_id):
                        """, (product_id,))
 
         conn.commit()
+
+def delete_all_products():
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            DELETE FROM products
+        """)
+
+        conn.commit()

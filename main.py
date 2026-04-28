@@ -6,7 +6,7 @@ import threading
 from telebot import types
 from parser import load_product_info
 from dotenv import load_dotenv
-from db.products import add_product
+from db.products import add_product, delete_all_products
 from db.prices import add_price, get_all_prices, update_price,get_price, delete_price, get_price_by_name
 from db.tables import create_tables
 
@@ -24,8 +24,9 @@ def start(message):
     btn2 = types.KeyboardButton("Check status")
     btn3 = types.KeyboardButton("Delete option")
     btn4 = types.KeyboardButton("Info for a product")
+    btn5 = types.KeyboardButton("Delete all")
 
-    markup.add(btn1, btn2, btn3, btn4)
+    markup.add(btn1, btn2, btn3, btn4, btn5)
 
     bot.reply_to(message, "Bot is active!\nChoose an option: ", reply_markup = markup)
 
@@ -52,6 +53,7 @@ def check(message):
         bot.reply_to(message, result)
     except Exception as e:
         print(e)
+        bot.reply_to(message,"No data")
 
 @bot.message_handler(func = lambda message: message.text == "Delete option")
 def ask_delete_index(message):
@@ -72,6 +74,19 @@ def ask_delete_index(message):
     except Exception as e:
         print(e)
 
+@bot.message_handler(func = lambda message: message.text == "Delete all")
+def delete_all(message):
+    try:
+        chat_id = message.chat.id
+        rows = get_price(chat_id)
+        if not rows:
+            bot.reply_to(message, "No links to delete")
+            return
+        delete_all_products()
+
+
+    except Exception as e:
+        print(e)
 
 @bot.message_handler(func=lambda message: message.text == "Info for a product")
 def get_info_by_name(message):
@@ -205,6 +220,3 @@ if __name__ == "__main__":
 
     bot.polling(True)
 
-
-
-    # 2. adaug option pentru querry dupa un product name

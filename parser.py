@@ -27,8 +27,6 @@ def load_product_info(url):
         elif magazine == "Darwin":
             title_tag = soup.find(class_="fs-24 lh-25-fix")
             price_tag = soup.find(class_="block-price")
-
-
         # elif magazine == "Enter":
         #     title_tag = soup.find(class_="fw-semibold fs-22 lh-base text-gray-900")
         #     price_tag = soup.find(class_="fs-20")

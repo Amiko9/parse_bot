@@ -64,6 +64,8 @@ def delete_price(product_id,chat_id, magazine_name):
         conn.commit()
 
 
+
+
 def update_price(product_id, chat_id, magazine_name, price):
     with get_connection() as conn:
         cursor = conn.cursor()
@@ -94,3 +96,4 @@ def get_price_by_name(title, chat_id):
         """, (title,chat_id,))
 
         return cursor.fetchall()
+
