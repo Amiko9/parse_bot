@@ -92,8 +92,10 @@ def get_price_by_name(title, chat_id):
                 prices.price
             FROM products
             JOIN prices ON products.id = prices.product_id
-            WHERE products.name_product = ? AND prices.chat_id = ?
-        """, (title,chat_id,))
+            WHERE products.name_product LIKE ? AND prices.chat_id = ?
+        """, (f"%{title}%",chat_id,))
 
         return cursor.fetchall()
+
+
 

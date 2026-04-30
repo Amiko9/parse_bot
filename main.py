@@ -105,3 +105,5 @@ if __name__ == "__main__":
 
     bot.polling(True)
 
+# optiune cu categorie care primeste link
+# si extrage fiecare produs il pune in baza de date
