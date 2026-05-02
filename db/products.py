@@ -59,5 +59,9 @@ def delete_all_products():
         cursor.execute("""
             DELETE FROM products
         """)
+        cursor.execute("""
+                       DELETE
+                       FROM prices
+                       """)
 
         conn.commit()

@@ -34,6 +34,7 @@ def get_price(chat_id):
             FROM products
             JOIN prices ON products.id = prices.product_id
             WHERE prices.chat_id = ?
+            ORDER BY prices.price DESC 
         """, (chat_id,))
 
         return cursor.fetchall()

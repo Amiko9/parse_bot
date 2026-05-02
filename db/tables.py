@@ -18,7 +18,7 @@ sql_statements = [
             magazine_name TEXT NOT NULL CHECK (magazine_name IN ('Darwin', 'Enter', 'Neocomputer')),
             link TEXT NOT NULL,
             price TEXT NOT NULL,
-            PRIMARY KEY (product_id, magazine_name),
+            PRIMARY KEY (product_id, chat_id, magazine_name),
             FOREIGN KEY (product_id) REFERENCES products(id)
 );
          """
@@ -37,4 +37,13 @@ def create_tables():
             print("Tables created successfully.")
     except sqlite3.OperationalError as e:
         print("Failed to create tables:", e)
+
+def reset_tables():
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DROP TABLE IF EXISTS prices")
+        cursor.execute("DROP TABLE IF EXISTS products")
+        conn.commit()
+
+    create_tables()
 

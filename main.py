@@ -5,8 +5,8 @@ from telebot import types
 from dotenv import load_dotenv
 from db.products import delete_all_products
 from db.prices import get_price
-from db.tables import create_tables
-from helping_functions import ask_custom_product_name, delete_option, get_info_product, background_checker
+from db.tables import create_tables, DB
+from helping_functions import ask_custom_product_name, delete_option, get_info_product, background_checker,get_products_from_category
 
 load_dotenv()
 
@@ -23,8 +23,9 @@ def start(message):
     btn3 = types.KeyboardButton("Delete option")
     btn4 = types.KeyboardButton("Info for a product")
     btn5 = types.KeyboardButton("Delete all")
+    btn6 = types.KeyboardButton("Products by category")
 
-    markup.add(btn1, btn2, btn3, btn4, btn5)
+    markup.add(btn1, btn2, btn3, btn4, btn5, btn6)
 
     bot.reply_to(message, "Bot is active!\nChoose an option: ", reply_markup = markup)
 
@@ -47,7 +48,7 @@ def check(message):
         result =""
         for index, row in enumerate(rows, 1):
             product_id, chat_id, title, magazine, url, price = row
-            result += f"{index}:{title} || {magazine} || {price}\n"
+            result += f"{index}:{title} || {magazine} || {price} lei\n"
         bot.reply_to(message, result)
     except Exception as e:
         print(e)
@@ -65,7 +66,7 @@ def ask_delete_index(message):
         result = "Links list:\n\n"
         for index, row in enumerate(rows, 1):
             product_id, chat_id, title, magazine, url, price = row
-            result += f"{index}:{title} || {magazine} || {price}\n"
+            result += f"{index}:{title} || {magazine} || {price} lei\n"
 
         msg = bot.reply_to(message, result + "\nEnter the index you want to delete:")
         bot.register_next_step_handler(msg, delete_option)
@@ -94,6 +95,14 @@ def get_info_by_name(message):
     except Exception as e:
         print(e)
 
+@bot.message_handler(func = lambda message: message.text == "Products by category")
+def get_products_by_category(message):
+    try:
+        msg = bot.reply_to(message, "Enter a link of category:")
+        bot.register_next_step_handler(msg, get_products_from_category)
+
+    except Exception as e:
+        print(e)
 
 
 

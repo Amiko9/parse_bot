@@ -5,7 +5,7 @@ import re
 import time
 from dotenv import load_dotenv
 import os
-from parser import load_product_info
+from parser import load_product_info, load_category_info
 
 load_dotenv()
 
@@ -26,7 +26,7 @@ def get_info_product(message):
                 result += f"\n{index}. {title}\n"
                 last_title = title
 
-            result += f"   {magazine} || {price}\n"
+            result += f"   {magazine} || {price} lei\n"
         bot.reply_to(message, result)
 
     except Exception as e:
@@ -69,7 +69,7 @@ def add_link(message, url):
 
             bot.reply_to(
                     message,
-                    f"Monitoring started:\n{custom_title}\nReal title: {info['title']}\nPrice: {info['price']}\nMagazine: {info['magazine']}\n{url}"
+                    f"Monitoring started:\n{custom_title}\nReal title: {info['title']}\nPrice: {info['price']} lei\nMagazine: {info['magazine']}\n{url}"
                 )
         except Exception as e:
             print(e)
@@ -97,6 +97,28 @@ def delete_option(message):
         bot.reply_to(message, f"Deleted link:\n{title}\n{link}")
     except Exception as e:
         print(e)
+
+def get_products_from_category(message):
+    try:
+        chat_id = message.chat.id
+        url = message.text.strip()
+
+        products = load_category_info(url)
+
+        for product in products:
+            product_id = add_product(product["title"])
+            add_price(
+                product_id,
+                chat_id,
+                product["magazine"],
+                product["url"],
+                product["price"]
+            )
+
+        bot.reply_to(message, "Link added succesfully")
+    except Exception as e:
+        print(e)
+
 
 def background_checker():
     while True:
